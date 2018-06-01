@@ -6,9 +6,12 @@ from mysql.connector import MySQLConnection, Error
 from getCredentials import gc
 
 # Set manufacturer name
-MFG = "PRAB"
-MFGID = 15357
+manufacturer_name = 'Titech'
+manufacturer_id = 17038
 
+print("editing: " + manufacturer_name)
+print(manufacturer_name)
+print(" ")
 # Replace *** with osx keychain context
 pvtpath = "~/Dropbox/iPython/Outputs/"
 cred = gc()
@@ -21,12 +24,44 @@ dbconfig = {
     "buffered":"True",
 }
 
+# Get status quo
+SQEquipmentQuery ="""
+SELECT asset.name AS asset, asset.id AS assetID
+FROM asset
+WHERE asset.name LIKE '%{0}%'
+""".format(manufacturer_name)
+
+def getSQEquipment():
+    db_connection_sales_mgr = mysql.connector.connect(**dbconfig)
+    SQequipment = pd.read_sql(SQEquipmentQuery, db_connection_sales_mgr)
+    return SQequipment
+
+SQequip = getSQEquipment()
+
+print("Rows: " + str(len(SQequip.index)))
+oldrows = len(SQequip.index)
+print(SQequip)
+
+# Report action
+print("Finding equipment matching: %s" % manufacturer_name)
+print("Setting MFG to: %d" % manufacturer_id)
+
+# Get user approval
+approval = input("Proceed? (Yes/No) ")
+if approval == 'Yes':
+    pass
+else:
+    print("Approval declined and aborting script")
+    sys.exit()
+
+
+
 # Construct via CONCAT string for classification based on attributes that contribute quality listing.
 equipmentQuery ="""
 SELECT asset.name AS asset, asset.id AS assetID
 FROM asset
 WHERE asset.name LIKE '%{0}%'
-""".format(MFG)
+""".format(manufacturer_name)
 
 def getEquipment():
     db_connection_sales_mgr = mysql.connector.connect(**dbconfig)
@@ -48,7 +83,7 @@ equipmentUpdateQuery ="""
 UPDATE asset
 SET asset.manufacturer_client_id = {1}
 WHERE asset.id IN ({2})
-""".format(0,MFGID,assetIDString)
+""".format(0,manufacturer_id,assetIDString)
 
 ###### Define connection for sending the manufacturer
 def updateMFGQuery():
@@ -61,8 +96,6 @@ def updateMFGQuery():
 
 # Send the MFG update
 updateqmfg = updateMFGQuery()
-
-
 
 try:
     for index, row in equip.iterrows():
@@ -85,3 +118,23 @@ try:
         updateweb = updateWebsiteQuery()
 except Exception as er:
     print(er)
+
+
+# Get new status quo for this
+# Get status quo
+NewSQEquipmentQuery ="""
+SELECT asset.name AS asset, asset.id AS assetID
+FROM asset
+WHERE asset.manufacturer_client_id LIKE '%{0}%'
+""".format(manufacturer_id)
+
+def getnewSQEquipment():
+    db_connection_sales_mgr = mysql.connector.connect(**dbconfig)
+    SQnewequipment = pd.read_sql(NewSQEquipmentQuery, db_connection_sales_mgr)
+    return SQnewequipment
+
+SQnewequip = getnewSQEquipment()
+
+print("These numbers below should match exactly...")
+print("Old ID Rows: " + str(oldrows))
+print("New ID Rows: " + str(len(SQnewequip.index)))
