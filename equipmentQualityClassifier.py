@@ -4,7 +4,7 @@ import numpy as np
 import nltk
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
 import mysql.connector
 from mysql.connector import MySQLConnection, Error
 from getCredentials import gc
@@ -29,7 +29,7 @@ media.size as MSIZE,
 media.media_type as MTYPE,
 asset_detailed.name as NAME,
 asset_detailed.description as DESCRIPTION,
-CONCAT(media.size,'\n', asset_detailed.name, '\n' ,asset_detailed.description, '\n' ,asset_detailed.internal_id, '\n', media.media_type) AS CDESCRIP,
+CONCAT(media.size,'\n', asset_detailed.description, '\n', media.media_type) AS CDESCRIP,
 asset_detailed.cost_asis as COST,
 asset_detailed.sell_asis as SELL,
 asset_detailed.listing_quality AS QUALITY,
@@ -58,7 +58,7 @@ labels = list(equip['QUALITY'])
 aids = list(equip['ASSET_ID'])
 names = list(equip['NAME'])
 ####### define the training classifier - more rice = more power.
-training_size = int(len(descriptions) * 0.90)
+training_size = int(len(descriptions) * 0.55)
 train_descriptions = descriptions[:training_size]
 train_labels = labels[:training_size]
 ####### define the testing classifier
@@ -73,6 +73,7 @@ vectorizer.fit(train_descriptions)
 train_features = vectorizer.transform(train_descriptions)
 ####### init classifier and train it
 classifier = MultinomialNB()
+#classifier = GaussianNB()
 classifier.fit(train_features.toarray(), train_labels)
 ####### test classifier
 # Anything above 70% is acceptable threshold for accuracy for this task.
@@ -178,7 +179,7 @@ try:
         q = row[1] #asset quality
         print("trying: ", i, q)
         qb = querybuilder(i,q)
-        time.sleep(5)
+        time.sleep(3)
 except Exception as er:
     print(er)
 
@@ -191,6 +192,6 @@ try:
         q = row[1] #asset quality
         print("trying: ", i, q)
         qb = querybuilder(i,q)
-        time.sleep(5)
+        time.sleep(3)
 except Exception as er:
     print(er)

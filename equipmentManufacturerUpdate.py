@@ -6,8 +6,8 @@ from mysql.connector import MySQLConnection, Error
 from getCredentials import gc
 
 # Set manufacturer name
-manufacturer_name = 'Titech'
-manufacturer_id = 17038
+manufacturer_name = ' Industrial Paper'
+manufacturer_id = 36489
 
 print("editing: " + manufacturer_name)
 print(manufacturer_name)
@@ -26,7 +26,7 @@ dbconfig = {
 
 # Get status quo
 SQEquipmentQuery ="""
-SELECT asset.name AS asset, asset.id AS assetID
+SELECT asset.name AS asset, asset.id AS assetID, asset.manufacturer_client_id AS MFGID
 FROM asset
 WHERE asset.name LIKE '%{0}%'
 """.format(manufacturer_name)
